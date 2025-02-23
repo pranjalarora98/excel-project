@@ -4,7 +4,7 @@ import { EXCEL_ROWS, EXCEL_COLUMNS } from "../utils/Constant";
 import "../styles.css";
 
 const Excel = () => {
-  const [selectedCell, setSelectedCell] = useState({});
+  const [selectedCell, setSelectedCell] = useState("");
 
   const constructGrid = () => {
     const col = document.querySelector(".address-col-cont");
@@ -33,7 +33,7 @@ const Excel = () => {
         columnCell.setAttribute("class", "cell");
         columnCell.setAttribute("contenteditable", "true");
         columnCell.addEventListener("click", (e) => {
-          setSelectedCell({ row: i, column: j });
+          setSelectedCell(`${String.fromCharCode(j + 65)}${i}`);
         });
         cell.appendChild(columnCell);
       }
@@ -92,7 +92,7 @@ const Excel = () => {
         <span className="material-icons open">cloud_upload</span>
       </div>
       <div className="formula-actions-cont">
-        <input type="text" className="address-bar" />
+        <input type="text" className="address-bar" value={selectedCell} />
         <img
           className="formula-icon"
           src="https://img.icons8.com/ios/50/000000/formula-fx.png"
