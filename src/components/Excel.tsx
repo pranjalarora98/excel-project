@@ -1,12 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { EXCEL_ROWS, EXCEL_COLUMNS } from "../utils/Constant";
 
 import "../styles.css";
 
 const Excel = () => {
+  const [selectedCell, setSelectedCell] = useState({});
+
   const constructGrid = () => {
     const col = document.querySelector(".address-col-cont");
     const row = document.querySelector(".address-row-cont");
+    const cellBody = document.querySelector(".cells-cont");
 
     for (let i = 0; i < EXCEL_ROWS; i++) {
       const cell = document.createElement("div");
@@ -20,6 +23,21 @@ const Excel = () => {
       cell.setAttribute("class", "address-row");
       cell.innerText = String.fromCharCode(65 + i);
       row?.appendChild(cell);
+    }
+
+    for (let i = 0; i < EXCEL_ROWS; i++) {
+      const cell = document.createElement("div");
+      cell.style.display = "flex";
+      for (let j = 0; j < EXCEL_COLUMNS; j++) {
+        const columnCell = document.createElement("div");
+        columnCell.setAttribute("class", "cell");
+        columnCell.setAttribute("contenteditable", "true");
+        columnCell.addEventListener("click", (e) => {
+          setSelectedCell({ row: i, column: j });
+        });
+        cell.appendChild(columnCell);
+      }
+      cellBody?.appendChild(cell);
     }
   };
 
