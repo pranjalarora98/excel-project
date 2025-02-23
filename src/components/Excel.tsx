@@ -2,48 +2,58 @@ import React, { useEffect, useState } from "react";
 import { EXCEL_ROWS, EXCEL_COLUMNS } from "../utils/Constant";
 
 import "../styles.css";
+import { getSelectedIndex } from "../utils/ExcelUtils";
 
 const Excel = () => {
+  interface cellType {
+    bold: boolean;
+    italic: boolean;
+    underline: boolean;
+    alignment: string;
+    fontFamily: string;
+    fontSize: string;
+    fontColor: string;
+    bgColor: string;
+  }
   const [selectedCell, setSelectedCell] = useState("");
-
-  const constructGrid = () => {
-    const col = document.querySelector(".address-col-cont");
-    const row = document.querySelector(".address-row-cont");
-    const cellBody = document.querySelector(".cells-cont");
-
-    for (let i = 0; i < EXCEL_ROWS; i++) {
-      const cell = document.createElement("div");
-      cell.setAttribute("class", "address-col");
-      cell.innerText = String(i);
-      col?.appendChild(cell);
-    }
-
-    for (let i = 0; i < EXCEL_COLUMNS; i++) {
-      const cell = document.createElement("div");
-      cell.setAttribute("class", "address-row");
-      cell.innerText = String.fromCharCode(65 + i);
-      row?.appendChild(cell);
-    }
-
-    for (let i = 0; i < EXCEL_ROWS; i++) {
-      const cell = document.createElement("div");
-      cell.style.display = "flex";
-      for (let j = 0; j < EXCEL_COLUMNS; j++) {
-        const columnCell = document.createElement("div");
-        columnCell.setAttribute("class", "cell");
-        columnCell.setAttribute("contenteditable", "true");
-        columnCell.addEventListener("click", (e) => {
-          setSelectedCell(`${String.fromCharCode(j + 65)}${i}`);
-        });
-        cell.appendChild(columnCell);
-      }
-      cellBody?.appendChild(cell);
-    }
-  };
+  const [cellData, setCellData] = useState<cellType[][]>([]);
 
   useEffect(() => {
-    constructGrid();
+    // constructGrid();
+    const data = [];
+    for (let i = 0; i < EXCEL_ROWS; i++) {
+      const rowData = [];
+      for (let j = 0; j < EXCEL_COLUMNS; j++) {
+        const obj = {
+          bold: false,
+          italic: false,
+          underline: false,
+          alignment: "left",
+          fontFamily: "monospace",
+          fontSize: "14",
+          fontColor: "#000000",
+          bgColor: "#000000",
+        };
+        rowData.push(obj);
+      }
+      data.push(rowData);
+    }
+    console.log(data);
+    setCellData(data);
   }, []);
+
+  const boldHandler = () => {
+    const [row, column] = getSelectedIndex(selectedCell);
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLElement;
+    cell.style.fontWeight = "bold";
+    setCellData((prev) => {
+      const data = [...prev];
+      data[row][column].bold = !data[row][column].bold;
+      return data;
+    });
+  };
 
   return (
     <>
@@ -70,7 +80,9 @@ const Excel = () => {
           <option value="18">18</option>
           <option value="20">20</option>
         </select>
-        <span className="material-icons bold">format_bold</span>
+        <span className="material-icons bold" onClick={() => boldHandler()}>
+          format_bold
+        </span>
         <span className="material-icons italic">format_italic</span>
         <span className="material-icons underline">format_underlined</span>
         <span className="left material-icons alignment">format_align_left</span>
@@ -101,9 +113,49 @@ const Excel = () => {
       </div>
       <div className="grid-cont">
         <div className="top-left-dummy-box"></div>
-        <div className="address-col-cont"></div>
+
+        <div className="address-col-cont">
+          {Array(EXCEL_ROWS)
+            .fill("")
+            .map((item, index) => (
+              <div className="address-col">{index}</div>
+            ))}
+        </div>
+
         <div className="cells-cont">
-          <div className="address-row-cont"></div>
+          <div className="address-row-cont">
+            {Array(EXCEL_COLUMNS)
+              .fill("")
+              .map((item, index) => (
+                <div className="address-row">
+                  {String.fromCharCode(index + 65)}
+                </div>
+              ))}
+          </div>
+
+          <div>
+            {Array(EXCEL_ROWS)
+              .fill("")
+              .map((item, index) => (
+                <div style={{ display: "flex" }}>
+                  {Array(EXCEL_COLUMNS)
+                    .fill("")
+                    .map((item1, index1) => (
+                      <div
+                        contentEditable
+                        className="cell"
+                        onClick={() => {
+                          setSelectedCell(
+                            `${String.fromCharCode(65 + index1)}${index}`
+                          );
+                        }}
+                        data-row={index}
+                        data-column={index1}
+                      ></div>
+                    ))}
+                </div>
+              ))}
+          </div>
         </div>
       </div>
       <div className="sheet-actions-cont">
