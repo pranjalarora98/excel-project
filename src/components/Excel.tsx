@@ -127,10 +127,35 @@ const Excel = () => {
     const cell = document.querySelector(
       `[data-row="${row}"][data-column="${column}"]`
     ) as HTMLElement;
-    cell.innerText = eval(formula);
-    cellData[row][column].value = eval(formula);
+    cell.innerText = calculateFormula(formula);
+    cellData[row][column].value = calculateFormula(formula);
     cellData[row][column].formula = formula;
     formulaBar.value = "";
+  };
+
+  const decodeCell = (str: string) => {
+    const column = str.charCodeAt(0) - 65;
+    const row = Number(str[1]);
+
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLElement;
+
+    return cell.innerText;
+  };
+
+  const calculateFormula = (formula: string) => {
+    const formulaArray = formula.split(" ");
+
+    for (let i = 0; i < formulaArray.length; i++) {
+      const ch = formulaArray[i].charCodeAt(0);
+      if (ch >= 65 && ch <= 90) {
+        formulaArray[i] = decodeCell(formulaArray[i]);
+      }
+    }
+
+    const newFormula = formulaArray.join(" ");
+    return eval(newFormula);
   };
 
   return (
