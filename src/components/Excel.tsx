@@ -14,6 +14,8 @@ const Excel = () => {
     fontSize: string;
     fontColor: string;
     bgColor: string;
+    value: string;
+    formula: string;
   }
   const [selectedCell, setSelectedCell] = useState("");
   const [cellData, setCellData] = useState<cellType[][]>([]);
@@ -33,6 +35,8 @@ const Excel = () => {
           fontSize: "14",
           fontColor: "#000000",
           bgColor: "#000000",
+          value: "",
+          formula: "",
         };
         rowData.push(obj);
       }
@@ -47,12 +51,86 @@ const Excel = () => {
     const cell = document.querySelector(
       `[data-row="${row}"][data-column="${column}"]`
     ) as HTMLElement;
-    cell.style.fontWeight = "bold";
+    cell.style.fontWeight = cellData[row][column].bold ? "normal" : "bold";
     setCellData((prev) => {
-      const data = [...prev];
+      const data = JSON.parse(JSON.stringify(prev));
       data[row][column].bold = !data[row][column].bold;
       return data;
     });
+  };
+
+  const italicHandler = () => {
+    const [row, column] = getSelectedIndex(selectedCell);
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLInputElement;
+    const obj = cellData[row][column];
+    cell.style.fontStyle = obj.italic ? "normal" : "italic";
+    setCellData((prev) => {
+      const data = JSON.parse(JSON.stringify(prev));
+      data[row][column].italic = !data[row][column].italic;
+      return data;
+    });
+  };
+
+  const underlineHandler = () => {
+    const [row, column] = getSelectedIndex(selectedCell);
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLElement;
+    cell.style.textDecoration = cellData[row][column].underline
+      ? "none"
+      : "underline";
+    setCellData((prev) => {
+      const data = JSON.parse(JSON.stringify(prev));
+      data[row][column].underline = !data[row][column].underline;
+      return data;
+    });
+  };
+
+  const getBoldStyle = () => {
+    if (!selectedCell) return {};
+    const [row, column] = getSelectedIndex(selectedCell);
+    const obj = cellData?.[row]?.[column];
+    if (obj?.bold)
+      return {
+        backgroundColor: "green",
+      };
+  };
+
+  const getItalicStyle = () => {
+    if (!selectedCell) return {};
+    const [row, column] = getSelectedIndex(selectedCell);
+    const obj = cellData?.[row]?.[column];
+    if (obj?.italic)
+      return {
+        backgroundColor: "green",
+      };
+  };
+
+  const getUnderlineStyle = () => {
+    if (!selectedCell) return {};
+    const [row, column] = getSelectedIndex(selectedCell);
+    const obj = cellData?.[row]?.[column];
+    if (obj?.underline)
+      return {
+        backgroundColor: "green",
+      };
+  };
+
+  const blurHandler = () => {
+    const formulaBar = document.getElementById(
+      "formula-bar"
+    ) as HTMLInputElement;
+    const formula = formulaBar.value;
+    const [row, column] = getSelectedIndex(selectedCell);
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLElement;
+    cell.innerText = eval(formula);
+    cellData[row][column].value = eval(formula);
+    cellData[row][column].formula = formula;
+    formulaBar.value = "";
   };
 
   return (
@@ -80,11 +158,27 @@ const Excel = () => {
           <option value="18">18</option>
           <option value="20">20</option>
         </select>
-        <span className="material-icons bold" onClick={() => boldHandler()}>
+        <span
+          className="material-icons bold"
+          onClick={boldHandler}
+          style={getBoldStyle()}
+        >
           format_bold
         </span>
-        <span className="material-icons italic">format_italic</span>
-        <span className="material-icons underline">format_underlined</span>
+        <span
+          className="material-icons italic"
+          onClick={italicHandler}
+          style={getItalicStyle()}
+        >
+          format_italic
+        </span>
+        <span
+          className="material-icons underline"
+          onClick={underlineHandler}
+          style={getUnderlineStyle()}
+        >
+          format_underlined
+        </span>
         <span className="left material-icons alignment">format_align_left</span>
         <span className="center material-icons alignment">
           format_align_center
@@ -104,12 +198,24 @@ const Excel = () => {
         <span className="material-icons open">cloud_upload</span>
       </div>
       <div className="formula-actions-cont">
-        <input type="text" className="address-bar" value={selectedCell} />
+        <input
+          type="text"
+          id="address-bar"
+          className="address-bar"
+          value={selectedCell}
+        />
         <img
           className="formula-icon"
           src="https://img.icons8.com/ios/50/000000/formula-fx.png"
         />
-        <input type="text" className="formula-bar" />
+        <input
+          type="text"
+          className="formula-bar"
+          id="formula-bar"
+          onKeyDown={(e) => {
+            if (e.key == "Enter") blurHandler();
+          }}
+        />
       </div>
       <div className="grid-cont">
         <div className="top-left-dummy-box"></div>
