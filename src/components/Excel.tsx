@@ -16,8 +16,9 @@ const Excel = () => {
     bgColor: string;
     value: string;
     formula: string;
+    children: string[];
   }
-  const [selectedCell, setSelectedCell] = useState("");
+  const [selectedCell, setSelectedCell] = useState<string>("");
   const [cellData, setCellData] = useState<cellType[][]>([]);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const Excel = () => {
           bgColor: "#000000",
           value: "",
           formula: "",
+          children: [],
         };
         rowData.push(obj);
       }
@@ -45,6 +47,20 @@ const Excel = () => {
     console.log(data);
     setCellData(data);
   }, []);
+
+  const setFormulaText = () => {
+    if (!selectedCell) return;
+    const [row, column] = getSelectedIndex(selectedCell);
+    const data = cellData[row][column];
+    const formulaBar = document.getElementById(
+      "formula-bar"
+    ) as HTMLInputElement;
+    formulaBar.value = data.formula;
+  };
+
+  useEffect(() => {
+    if (selectedCell) setFormulaText();
+  }, [selectedCell]);
 
   const boldHandler = () => {
     const [row, column] = getSelectedIndex(selectedCell);
@@ -119,18 +135,71 @@ const Excel = () => {
   };
 
   const blurHandler = () => {
+    console.log("blur");
     const formulaBar = document.getElementById(
       "formula-bar"
     ) as HTMLInputElement;
     const formula = formulaBar.value;
     const [row, column] = getSelectedIndex(selectedCell);
+    removeChild();
+    appendChild(formula);
+
     const cell = document.querySelector(
       `[data-row="${row}"][data-column="${column}"]`
     ) as HTMLElement;
     cell.innerText = calculateFormula(formula);
-    cellData[row][column].value = calculateFormula(formula);
-    cellData[row][column].formula = formula;
+
+    setCellData((prev) => {
+      const data = [...prev];
+      data[row][column].value = calculateFormula(formula);
+      data[row][column].formula = formula;
+      return data;
+    });
+
+    // cellData[row][column].value = calculateFormula(formula);
+    // cellData[row][column].formula = formula;
+
     formulaBar.value = "";
+  };
+
+  //B1-> A1+2;
+  const appendChild = (formula: string) => {
+    const formulaArray = formula.split(" ");
+    for (let i = 0; i < formulaArray.length; i++) {
+      const ch = formulaArray[i].charCodeAt(0);
+      if (ch >= 65 && ch <= 90) {
+        const [row1, column1] = getSelectedIndex(formulaArray[i]);
+        setCellData((prev) => {
+          const data = JSON.parse(JSON.stringify(prev));
+          data[row1][column1].children.push(selectedCell);
+          return data;
+        });
+      }
+    }
+  };
+
+  const removeChild = () => {
+    const [row1, column1] = getSelectedIndex(selectedCell);
+    const formula = cellData[row1][column1].formula;
+
+    const formulaArray = formula.split(" ");
+
+    // const data = cellData[row1][column1].children;
+
+    for (let i = 0; i < formulaArray.length; i++) {
+      const ch = formulaArray[i].charCodeAt(0);
+
+      if (ch >= 65 && ch <= 90) {
+        const [row, column] = getSelectedIndex(formulaArray[i]);
+        setCellData((prev) => {
+          const newData = [...prev];
+          const data = newData[row][column];
+          const idx = data.children.findIndex((item) => item == selectedCell);
+          data.children.splice(idx, 1);
+          return newData;
+        });
+      }
+    }
   };
 
   const decodeCell = (str: string) => {
