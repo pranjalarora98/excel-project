@@ -50,8 +50,10 @@ const Excel = () => {
 
   const setFormulaText = () => {
     if (!selectedCell) return;
+
     const [row, column] = getSelectedIndex(selectedCell);
     const data = cellData[row][column];
+
     const formulaBar = document.getElementById(
       "formula-bar"
     ) as HTMLInputElement;
@@ -159,7 +161,7 @@ const Excel = () => {
     // cellData[row][column].value = calculateFormula(formula);
     // cellData[row][column].formula = formula;
 
-    formulaBar.value = "";
+    // formulaBar.value = "";
   };
 
   //B1-> A1+2;
@@ -225,6 +227,30 @@ const Excel = () => {
 
     const newFormula = formulaArray.join(" ");
     return eval(newFormula);
+  };
+
+  const checkFormula = (item: string) => {
+    const [row, column] = getSelectedIndex(item);
+    const formula = cellData[row][column].formula;
+    const newAns = calculateFormula(formula);
+    setCellData((prev) => {
+      const data = JSON.parse(JSON.stringify(prev));
+      data[row][column].value = newAns;
+      return data;
+    });
+    const cell = document.querySelector(
+      `[data-row="${row}"][data-column="${column}"]`
+    ) as HTMLElement;
+    cell.innerText = newAns;
+  };
+
+  const cellBlurHandler = () => {
+    const currentCell = selectedCell;
+    const [row, column] = getSelectedIndex(currentCell);
+    const children = cellData[row][column].children;
+    children.forEach((item, index) => {
+      checkFormula(item);
+    });
   };
 
   return (
@@ -351,6 +377,7 @@ const Excel = () => {
                         }}
                         data-row={index}
                         data-column={index1}
+                        onBlur={cellBlurHandler}
                       ></div>
                     ))}
                 </div>
