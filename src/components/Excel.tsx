@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { EXCEL_ROWS, EXCEL_COLUMNS } from "../utils/Constant";
-
+import useGraph from "../hooks/useGraph";
 import "../styles.css";
 import { getSelectedIndex } from "../utils/ExcelUtils";
 
@@ -20,6 +20,7 @@ const Excel = () => {
   }
   const [selectedCell, setSelectedCell] = useState<string>("");
   const [cellData, setCellData] = useState<cellType[][]>([]);
+  const { addChild, checkCycle } = useGraph();
 
   useEffect(() => {
     // constructGrid();
@@ -137,14 +138,22 @@ const Excel = () => {
   };
 
   const blurHandler = () => {
-    console.log("blur");
     const formulaBar = document.getElementById(
       "formula-bar"
     ) as HTMLInputElement;
     const formula = formulaBar.value;
+
+    const ans = checkCycle();
+
+    if (ans) {
+      return alert("Cycle exists.Please check again");
+    }
+
     const [row, column] = getSelectedIndex(selectedCell);
     removeChild();
     appendChild(formula);
+
+    addChild(formula, selectedCell);
 
     const cell = document.querySelector(
       `[data-row="${row}"][data-column="${column}"]`
@@ -157,11 +166,6 @@ const Excel = () => {
       data[row][column].formula = formula;
       return data;
     });
-
-    // cellData[row][column].value = calculateFormula(formula);
-    // cellData[row][column].formula = formula;
-
-    // formulaBar.value = "";
   };
 
   //B1-> A1+2;
@@ -212,7 +216,7 @@ const Excel = () => {
       `[data-row="${row}"][data-column="${column}"]`
     ) as HTMLElement;
 
-    return cell.innerText;
+    return cell.innerText || cellData[row][column].value;
   };
 
   const calculateFormula = (formula: string) => {
@@ -248,7 +252,7 @@ const Excel = () => {
     const currentCell = selectedCell;
     const [row, column] = getSelectedIndex(currentCell);
     const children = cellData[row][column].children;
-    children.forEach((item, index) => {
+    children.forEach((item) => {
       checkFormula(item);
     });
   };
