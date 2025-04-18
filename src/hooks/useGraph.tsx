@@ -52,6 +52,7 @@ const useGraph = () => {
   };
 
   const checkDfs = (i, j) => {
+    console.log(i);
     if (visited[i][j]) return true;
 
     setVisited((prev) => {
